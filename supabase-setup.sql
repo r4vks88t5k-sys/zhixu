@@ -36,20 +36,20 @@ using (status = 'published');
 
 create policy "Owner can read all articles"
 on public.articles for select to authenticated
-using (auth.uid() = 'YOUR-USER-UUID'::uuid);
+using (auth.uid() = '97f47413-d9bc-4cb6-8600-853b1fe83cec'::uuid);
 
 create policy "Owner can create articles"
 on public.articles for insert to authenticated
-with check (auth.uid() = 'YOUR-USER-UUID'::uuid and user_id = auth.uid());
+with check (auth.uid() = '97f47413-d9bc-4cb6-8600-853b1fe83cec'::uuid and user_id = auth.uid());
 
 create policy "Owner can update articles"
 on public.articles for update to authenticated
-using (auth.uid() = 'YOUR-USER-UUID'::uuid)
-with check (auth.uid() = 'YOUR-USER-UUID'::uuid and user_id = auth.uid());
+using (auth.uid() = '97f47413-d9bc-4cb6-8600-853b1fe83cec'::uuid)
+with check (auth.uid() = '97f47413-d9bc-4cb6-8600-853b1fe83cec'::uuid and user_id = auth.uid());
 
 create policy "Owner can delete articles"
 on public.articles for delete to authenticated
-using (auth.uid() = 'YOUR-USER-UUID'::uuid);
+using (auth.uid() = '97f47413-d9bc-4cb6-8600-853b1fe83cec'::uuid);
 
 grant select on public.articles to anon, authenticated;
 grant insert, update, delete on public.articles to authenticated;
