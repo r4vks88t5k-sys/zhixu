@@ -51,20 +51,25 @@ function updateGutter(){
   const lines=editor.value.split('\n');
   const style=getComputedStyle(editor);
   const lineHeight=parseFloat(style.lineHeight);
+  const pl=parseFloat(style.paddingLeft)||0;
+  const pr=parseFloat(style.paddingRight)||0;
   const mirror=document.createElement('div');
-  mirror.style.cssText='position:absolute;visibility:hidden;left:-100000px;top:0;box-sizing:border-box;white-space:pre-wrap;overflow-wrap:anywhere;tab-size:'+style.tabSize+';font:'+style.font+';padding:'+style.padding+';border:0;width:'+editor.clientWidth+'px';
+  mirror.style.cssText='position:absolute;visibility:hidden;left:-100000px;top:0;box-sizing:content-box;white-space:pre-wrap;overflow-wrap:anywhere;tab-size:'+style.tabSize+';font-family:'+style.fontFamily+';font-size:'+style.fontSize+';font-weight:'+style.fontWeight+';font-style:'+style.fontStyle+';letter-spacing:'+style.letterSpacing+';word-spacing:'+style.wordSpacing+';line-height:'+style.lineHeight+';padding:0;border:0;margin:0;width:'+Math.max(0,editor.clientWidth-pl-pr)+'px;min-height:'+lineHeight+'px';
   document.body.appendChild(mirror);
-  let html='',top=0;
+  gutter.innerHTML='';
   for(let i=0;i<lines.length;i++){
-    mirror.textContent=lines[i]||' ';
-    let h=mirror.getBoundingClientRect().height;
-    html+='<div style="position:absolute;top:'+(top+parseFloat(style.paddingTop))+'px;right:10px;line-height:'+lineHeight+'px">'+(i+1)+'</div>';
-    top+=Math.max(lineHeight,h);
+    mirror.textContent=lines[i]||'\u200b';
+    const h=Math.max(lineHeight,mirror.getBoundingClientRect().height);
+    const row=document.createElement('div');
+    row.textContent=i+1;
+    row.style.height=h+'px';
+    row.style.lineHeight=lineHeight+'px';
+    row.style.whiteSpace='nowrap';
+    row.style.boxSizing='border-box';
+    gutter.appendChild(row);
   }
-  gutter.style.position='relative';
-  gutter.innerHTML=html;
-  gutter.scrollTop=editor.scrollTop;
   mirror.remove();
+  gutter.scrollTop=editor.scrollTop;
 }
 function updatePosition(){const lines=editor.value.slice(0,editor.selectionStart).split('\n');position.textContent='行 '+lines.length+'，列 '+(lines[lines.length-1].length+1)}
 function lineBounds(){const s=editor.selectionStart,e=editor.selectionEnd,v=editor.value,a=v.lastIndexOf('\n',s-1)+1;let b=v.indexOf('\n',e);if(b<0)b=v.length;return{start:a,end:b,text:v.slice(a,b)}}
