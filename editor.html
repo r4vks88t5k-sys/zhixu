@@ -50,33 +50,16 @@ function render(){const source=editor.value;preview.innerHTML=DOMPurify.sanitize
 function updateGutter(){
   const lines=editor.value.split('\n');
   const style=getComputedStyle(editor);
+  const lineHeight=parseFloat(style.lineHeight);
   const mirror=document.createElement('div');
-  mirror.style.cssText=[
-    'position:absolute',
-    'visibility:hidden',
-    'left:-100000px',
-    'top:0',
-    'box-sizing:border-box',
-    'white-space:pre-wrap',
-    'overflow-wrap:anywhere',
-    'tab-size:'+style.tabSize,
-    'font-family:'+style.fontFamily,
-    'font-size:'+style.fontSize,
-    'font-weight:'+style.fontWeight,
-    'font-style:'+style.fontStyle,
-    'letter-spacing:'+style.letterSpacing,
-    'line-height:'+style.lineHeight,
-    'padding:'+style.padding,
-    'border:0',
-    'width:'+editor.clientWidth+'px'
-  ].join(';');
+  mirror.style.cssText='position:absolute;visibility:hidden;left:-100000px;top:0;box-sizing:border-box;white-space:pre-wrap;overflow-wrap:anywhere;tab-size:'+style.tabSize+';font:'+style.font+';padding:'+style.padding+';border:0;width:'+editor.clientWidth+'px';
   document.body.appendChild(mirror);
-  let html='';
+  let html='',top=0;
   for(let i=0;i<lines.length;i++){
-    mirror.textContent=lines.slice(0,i).join('\n')+'\n';
-    let top=mirror.scrollHeight-parseFloat(style.paddingBottom);
-    if(i===0)top=parseFloat(style.paddingTop);
-    html+='<div style="position:absolute;top:'+top+'px;right:10px;height:'+style.lineHeight+'">'+(i+1)+'</div>';
+    mirror.textContent=lines[i]||' ';
+    let h=mirror.getBoundingClientRect().height;
+    html+='<div style="position:absolute;top:'+(top+parseFloat(style.paddingTop))+'px;right:10px;line-height:'+lineHeight+'px">'+(i+1)+'</div>';
+    top+=Math.max(lineHeight,h);
   }
   gutter.style.position='relative';
   gutter.innerHTML=html;
