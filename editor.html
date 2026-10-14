@@ -50,21 +50,36 @@ function render(){const source=editor.value;preview.innerHTML=DOMPurify.sanitize
 function updateGutter(){
   const lines=editor.value.split('\n');
   const style=getComputedStyle(editor);
-  const lineHeight=parseFloat(style.lineHeight);
-  const paddingTop=parseFloat(style.paddingTop);
-  const paddingLeft=parseFloat(style.paddingLeft);
-  const paddingRight=parseFloat(style.paddingRight);
   const mirror=document.createElement('div');
-  mirror.style.cssText='position:absolute;visibility:hidden;pointer-events:none;top:0;left:-99999px;box-sizing:border-box;white-space:pre-wrap;overflow-wrap:anywhere;tab-size:'+style.tabSize+';font:'+style.font+';letter-spacing:'+style.letterSpacing+';word-spacing:'+style.wordSpacing+';line-height:'+style.lineHeight+';padding:'+style.paddingTop+' '+style.paddingRight+' '+style.paddingBottom+' '+style.paddingLeft+';border:0;width:'+editor.clientWidth+'px;';
+  mirror.style.cssText=[
+    'position:absolute',
+    'visibility:hidden',
+    'left:-100000px',
+    'top:0',
+    'box-sizing:border-box',
+    'white-space:pre-wrap',
+    'overflow-wrap:anywhere',
+    'tab-size:'+style.tabSize,
+    'font-family:'+style.fontFamily,
+    'font-size:'+style.fontSize,
+    'font-weight:'+style.fontWeight,
+    'font-style:'+style.fontStyle,
+    'letter-spacing:'+style.letterSpacing,
+    'line-height:'+style.lineHeight,
+    'padding:'+style.padding,
+    'border:0',
+    'width:'+editor.clientWidth+'px'
+  ].join(';');
   document.body.appendChild(mirror);
-  let s='',top=paddingTop;
+  let html='';
   for(let i=0;i<lines.length;i++){
-    mirror.textContent=lines[i]||' ';
-    s+='<div style="position:absolute;top:'+top+'px;right:10px;height:'+lineHeight+'px">'+(i+1)+'</div>';
-    top+=mirror.getBoundingClientRect().height;
+    mirror.textContent=lines.slice(0,i).join('\n')+'\n';
+    let top=mirror.scrollHeight-parseFloat(style.paddingBottom);
+    if(i===0)top=parseFloat(style.paddingTop);
+    html+='<div style="position:absolute;top:'+top+'px;right:10px;height:'+style.lineHeight+'">'+(i+1)+'</div>';
   }
   gutter.style.position='relative';
-  gutter.innerHTML=s;
+  gutter.innerHTML=html;
   gutter.scrollTop=editor.scrollTop;
   mirror.remove();
 }
