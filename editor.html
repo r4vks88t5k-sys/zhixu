@@ -47,7 +47,27 @@ const editor=document.getElementById('editor'),preview=document.getElementById('
 marked.setOptions({gfm:true,breaks:false});
 function setStatus(msg,bad){status.innerHTML='<span class="status-dot" style="background:'+(bad?'#d9534f':'#2c9b74')+'"></span><span>'+Zhixu.esc(msg)+'</span>'}
 function render(){const source=editor.value;preview.innerHTML=DOMPurify.sanitize(marked.parse(source));if(typeof renderMathInElement==='function')renderMathInElement(preview,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\[',right:'\\]',display:true},{left:'\\(',right:'\\)',display:false},{left:'$',right:'$',display:false}],ignoredTags:['script','noscript','style','textarea','pre','code','option'],throwOnError:false});updateGutter();updatePosition();wordCount.textContent=source.replace(/\s/g,'').length+' 字';dirty=true}
-function updateGutter(){let n=editor.value.split('\n').length,s='';for(let i=1;i<=n;i++)s+=i+'\n';gutter.textContent=s;gutter.scrollTop=editor.scrollTop}
+function updateGutter(){
+  const lines=editor.value.split('\n');
+  const style=getComputedStyle(editor);
+  const lineHeight=parseFloat(style.lineHeight);
+  const paddingTop=parseFloat(style.paddingTop);
+  const paddingLeft=parseFloat(style.paddingLeft);
+  const paddingRight=parseFloat(style.paddingRight);
+  const mirror=document.createElement('div');
+  mirror.style.cssText='position:absolute;visibility:hidden;pointer-events:none;top:0;left:-99999px;box-sizing:border-box;white-space:pre-wrap;overflow-wrap:anywhere;tab-size:'+style.tabSize+';font:'+style.font+';letter-spacing:'+style.letterSpacing+';word-spacing:'+style.wordSpacing+';line-height:'+style.lineHeight+';padding:'+style.paddingTop+' '+style.paddingRight+' '+style.paddingBottom+' '+style.paddingLeft+';border:0;width:'+editor.clientWidth+'px;';
+  document.body.appendChild(mirror);
+  let s='',top=paddingTop;
+  for(let i=0;i<lines.length;i++){
+    mirror.textContent=lines[i]||' ';
+    s+='<div style="position:absolute;top:'+top+'px;right:10px;height:'+lineHeight+'px">'+(i+1)+'</div>';
+    top+=mirror.getBoundingClientRect().height;
+  }
+  gutter.style.position='relative';
+  gutter.innerHTML=s;
+  gutter.scrollTop=editor.scrollTop;
+  mirror.remove();
+}
 function updatePosition(){const lines=editor.value.slice(0,editor.selectionStart).split('\n');position.textContent='行 '+lines.length+'，列 '+(lines[lines.length-1].length+1)}
 function lineBounds(){const s=editor.selectionStart,e=editor.selectionEnd,v=editor.value,a=v.lastIndexOf('\n',s-1)+1;let b=v.indexOf('\n',e);if(b<0)b=v.length;return{start:a,end:b,text:v.slice(a,b)}}
 function replaceRange(start,end,text,caret){editor.setRangeText(text,start,end,'start');const p=caret===undefined?start+text.length:caret;editor.setSelectionRange(p,p);editor.focus();render()}
