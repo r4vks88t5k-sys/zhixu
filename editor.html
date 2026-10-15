@@ -142,12 +142,33 @@ function startAutosave(){
   if(autosaveTimer)clearInterval(autosaveTimer);
   autosaveTimer=null;
   if(!autosaveInterval)return;
+
   const seconds=Number(autosaveInterval.value);
+  console.log('[自动保存] 间隔：',seconds,'秒');
+
   if(!seconds)return;
+
   autosaveTimer=setInterval(async()=>{
+    console.log('[自动保存] 定时触发',{
+      loggedIn:!!currentUser,
+      dirty:dirty,
+      currentId:currentId
+    });
+
     if(!currentUser||!dirty)return;
+
     const f=readFields();
-    if(!f.title.trim()||!f.slug.trim())return;
+    console.log('[自动保存] 标题和 slug',{
+      title:f.title,
+      slug:f.slug
+    });
+
+    if(!f.title.trim()||!f.slug.trim()){
+      console.log('[自动保存] 跳过：标题或 slug 为空');
+      return;
+    }
+
+    console.log('[自动保存] 开始调用 save');
     await save('draft',true);
   },seconds*1000);
 }
@@ -156,6 +177,7 @@ if(autosaveInterval){
   autosaveInterval.addEventListener('change',startAutosave);
   startAutosave();
 }
+
 
 saveBtn.addEventListener('click',()=>save('draft'));publishBtn.addEventListener('click',()=>{if(confirm('确认发布这篇文章？发布后访客可以看到。'))save('published')});
 Zhixu.db().auth.onAuthStateChange(()=>{setTimeout(()=>refreshAuth().catch(e=>setStatus('登录状态检查失败：'+e.message,true)),0)});render();refreshAuth().catch(e=>setStatus('连接失败：'+e.message,true));
