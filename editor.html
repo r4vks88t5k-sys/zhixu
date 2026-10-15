@@ -6,12 +6,12 @@
 @media(max-width:850px){.app{width:calc(100% - 16px);height:auto;min-height:calc(100vh - 16px);margin:8px;border-radius:14px}.topbar{height:64px;padding:0 14px}.brand{font-size:17px}.toolbar-wrap{padding:8px}.toolbar{gap:5px}.tool{padding:0 9px}.workspace{grid-template-columns:1fr;grid-template-rows:minmax(420px,55vh) minmax(420px,55vh);padding:0 8px 8px;gap:8px}}@media(max-width:480px){.status{display:none}.tool{font-size:12px}.topbar{gap:9px}.logo{width:36px;height:36px}}
 </style></head><body><div class="app">
 <header class="topbar"><a href="index.html" class="logo" aria-label="返回首页" style="text-decoration:none">✎</a><div class="brand">知序 · 文章编辑器</div><div class="top-spacer"></div><div class="status" id="status"><span class="status-dot"></span><span>正在检查登录状态…</span></div><a href="articles.html" style="color:#2869d8;text-decoration:none;font-size:13px;white-space:nowrap">文章列表</a><button class="save-btn" id="loginBtn" type="button">登录</button><button class="save-btn" id="logoutBtn" type="button" style="display:none">退出</button><button class="save-btn" id="saveBtn" type="button">保存草稿</button>
-<select id="autosaveInterval" aria-label="自动保存间隔" style="padding:10px 8px;border:1px solid #dce6f2;border-radius:10px;background:#fff;color:#314766">
+<select id="autosaveInterval" title="自动保存间隔">
+  <option value="0">自动保存：关闭</option>
   <option value="30">自动保存：30 秒</option>
   <option value="60" selected>自动保存：1 分钟</option>
   <option value="300">自动保存：5 分钟</option>
   <option value="600">自动保存：10 分钟</option>
-  <option value="0">自动保存：关闭</option>
 </select>
 <button class="save-btn" id="publishBtn" type="button">发布文章</button></header>
 <div id="authPanel" style="display:none;padding:12px 18px;border-bottom:1px solid #dce6f2;background:#f8fbff;gap:8px;align-items:center;flex-wrap:wrap"><input id="email" type="email" placeholder="管理员邮箱" autocomplete="username" style="padding:9px 12px;border:1px solid #dce6f2;border-radius:8px"><input id="password" type="password" placeholder="密码" autocomplete="current-password" style="padding:9px 12px;border:1px solid #dce6f2;border-radius:8px"><button class="save-btn" id="doLogin" type="button">确认登录</button><span style="font-size:12px;color:#71829b">管理员账号请先在 Supabase Dashboard → Authentication → Users 创建；网站不开放注册。</span></div>
@@ -94,7 +94,69 @@ async function loadMine(){articleSelect.innerHTML='<option value="">新建文章
 async function refreshAuth(){const {data,error}=await Zhixu.db().auth.getSession();if(error)throw error;currentUser=data.session&&data.session.user||null;loginBtn.style.display=currentUser?'none':'inline-block';logoutBtn.style.display=currentUser?'inline-block':'none';saveBtn.disabled=!currentUser;publishBtn.disabled=!currentUser;authPanel.style.display='none';if(currentUser){setStatus('已登录：'+(currentUser.email||'管理员'));await loadMine()}else{setStatus('请先登录后保存或发布');articleSelect.innerHTML='<option value="">请登录后加载文章</option>';fill(null)}}
 loginBtn.addEventListener('click',()=>{authPanel.style.display=authPanel.style.display==='flex'?'none':'flex'});document.getElementById('doLogin').addEventListener('click',async()=>{const email=document.getElementById('email').value.trim(),password=document.getElementById('password').value;if(!email||!password){setStatus('请输入邮箱和密码',true);return}const {error}=await Zhixu.db().auth.signInWithPassword({email,password});if(error){setStatus('登录失败：'+error.message,true);return}await refreshAuth()});logoutBtn.addEventListener('click',async()=>{const {error}=await Zhixu.db().auth.signOut();if(error){setStatus('退出失败：'+error.message,true);return}currentId=null;await refreshAuth()});
 articleSelect.addEventListener('change',()=>{if(!articleSelect.value){fill(null);return}const o=articleSelect.selectedOptions[0];if(o.dataset.article)fill(JSON.parse(o.dataset.article))});
-async function save(statusValue){if(!currentUser){setStatus('请先登录',true);authPanel.style.display='flex';return}const f=readFields();if(!f.title){setStatus('请填写文章标题',true);return}if(!f.slug){setStatus('请填写英文或数字 slug',true);return}const now=new Date().toISOString();const payload={slug:f.slug,title:f.title,summary:f.summary,content:f.content,category:f.category,status:statusValue,user_id:currentUser.id,updated_at:now,published_at:statusValue==='published'?now:null};if(statusValue==='published'&&currentId){const selected=articleSelect.selectedOptions[0];if(selected&&selected.dataset.article){const prev=JSON.parse(selected.dataset.article);payload.published_at=prev.published_at||now}}let query;if(currentId)query=Zhixu.db().from('articles').update(payload).eq('id',currentId).select().single();else query=Zhixu.db().from('articles').insert(payload).select().single();const {data,error}=await query;if(error){setStatus('保存失败：'+error.message,true);return}currentId=data.id;dirty=false;setStatus(statusValue==='published'?'发布成功':'草稿已保存');await loadMine();articleSelect.value=currentId}
+async function save(statusValue,isAutosave=false){
+  if(!currentUser){
+    setStatus('请先登录',true);
+    authPanel.style.display='flex';
+    return
+  }
+  const f=readFields();
+  if(isAutosave&&(!f.title.trim()||!f.slug.trim()))return;
+  if(!f.title){setStatus('请填写文章标题',true);return}
+  if(!f.slug){setStatus('请填写英文或数字 slug',true);return}
+  if(isAutosave&&currentId){
+    const selected=articleSelect.selectedOptions[0];
+    if(selected&&selected.dataset.article){
+      const prev=JSON.parse(selected.dataset.article);
+      if(prev.status==='published')statusValue='published';
+    }
+  }
+  const now=new Date().toISOString();
+  const payload={slug:f.slug,title:f.title,summary:f.summary,content:f.content,category:f.category,status:statusValue,user_id:currentUser.id,updated_at:now,published_at:statusValue==='published'?now:null};
+  if(statusValue==='published'&&currentId){
+    const selected=articleSelect.selectedOptions[0];
+    if(selected&&selected.dataset.article){
+      const prev=JSON.parse(selected.dataset.article);
+      payload.published_at=prev.published_at||now
+    }
+  }
+  let query;
+  if(currentId)query=Zhixu.db().from('articles').update(payload).eq('id',currentId).select().single();
+  else query=Zhixu.db().from('articles').insert(payload).select().single();
+  const {data,error}=await query;
+  if(error){
+    setStatus('保存失败：'+error.message,true);
+    return
+  }
+  currentId=data.id;
+  dirty=false;
+  setStatus(statusValue==='published'?'发布成功':'草稿已保存');
+  await loadMine();
+  articleSelect.value=currentId
+}
+
+let autosaveTimer=null;
+const autosaveInterval=document.getElementById('autosaveInterval');
+
+function startAutosave(){
+  if(autosaveTimer)clearInterval(autosaveTimer);
+  autosaveTimer=null;
+  if(!autosaveInterval)return;
+  const seconds=Number(autosaveInterval.value);
+  if(!seconds)return;
+  autosaveTimer=setInterval(async()=>{
+    if(!currentUser||!dirty)return;
+    const f=readFields();
+    if(!f.title.trim()||!f.slug.trim())return;
+    await save('draft',true);
+  },seconds*1000);
+}
+
+if(autosaveInterval){
+  autosaveInterval.addEventListener('change',startAutosave);
+  startAutosave();
+}
+
 saveBtn.addEventListener('click',()=>save('draft'));publishBtn.addEventListener('click',()=>{if(confirm('确认发布这篇文章？发布后访客可以看到。'))save('published')});
 Zhixu.db().auth.onAuthStateChange(()=>{setTimeout(()=>refreshAuth().catch(e=>setStatus('登录状态检查失败：'+e.message,true)),0)});render();refreshAuth().catch(e=>setStatus('连接失败：'+e.message,true));
 })();
