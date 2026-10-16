@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>数学编辑器 · 知序</title>
+<style>
+:root{--bg:#f3f7fc;--line:#dce6f2;--ink:#20324d;--muted:#71829b;--blue:#2869d8;--shadow:0 12px 34px #26466d12;--white:#fff}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#eaf3ff 0,#f3f7fc 340px,#f3f7fc 100%);color:var(--ink);font:15px/1.65 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif}
+a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
+.layout{width:min(1600px,calc(100% - 32px));min-height:calc(100vh - 32px);margin:16px auto;display:grid;grid-template-columns:220px minmax(0,1fr);gap:18px}
+.sidebar,.panel{background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow)}
+.sidebar{padding:22px 14px;display:flex;flex-direction:column;gap:8px}.brand{font-size:22px;font-weight:800;letter-spacing:.04em;padding:0 10px 20px}.nav{display:block;padding:10px 12px;border-radius:11px;color:var(--ink)}.nav:hover,.nav.active{background:#eaf2ff;text-decoration:none;color:#174fae}.side-note{margin-top:auto;padding:12px;color:var(--muted);font-size:12px}
+main{min-width:0;padding:8px 0 24px}.topline{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:8px 4px 18px}.crumb{color:var(--muted);font-size:13px}
+.panel{padding:clamp(18px,3vw,30px);margin-bottom:16px}.row{display:flex;gap:14px;align-items:center;flex-wrap:wrap}.row>*{min-width:0}.grow{flex:1}.field{display:flex;flex-direction:column;gap:6px;min-width:0}.field label{font-weight:650;font-size:13px}.field small,.hint{color:var(--muted);font-size:12px}.field input,.field textarea,.field select{width:100%;font:inherit;color:var(--ink);border:1px solid #cfdced;border-radius:10px;padding:10px 12px;background:#fff;outline:none}.field input:focus,.field textarea:focus,.field select:focus{border-color:#7ba8ed;box-shadow:0 0 0 3px #2869d818}.field textarea{resize:vertical;min-height:110px}.field textarea.large{min-height:260px}.field textarea.statement{min-height:150px}
+h1{font-size:clamp(25px,3vw,34px);margin:0}h2{font-size:19px;margin:0 0 16px}.sub{color:var(--muted);margin:5px 0 0}.tabs{display:flex;gap:8px;flex-wrap:wrap}.tab,.btn{font:inherit;border:1px solid var(--line);border-radius:10px;padding:9px 14px;background:#fff;color:var(--ink);cursor:pointer}.tab.active{background:#eaf2ff;border-color:#b6d0f5;color:#174fae;font-weight:700}.btn.primary{background:var(--blue);border-color:var(--blue);color:white}.btn:disabled{opacity:.5;cursor:not-allowed}.btn:hover,.tab:hover{filter:brightness(.98)}.toolbar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}.toolbar button{padding:5px 9px;border:1px solid var(--line);background:#fff;border-radius:7px;cursor:pointer}.editor-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.preview{border:1px solid var(--line);border-radius:10px;padding:12px;min-height:260px;overflow-wrap:anywhere;background:#fbfdff}.preview h1,.preview h2,.preview h3{line-height:1.4}.preview pre{overflow:auto;background:#f2f6fb;padding:12px;border-radius:8px}.preview blockquote{border-left:3px solid #9bbbe9;margin:10px 0;padding-left:12px;color:var(--muted)}.preview table{border-collapse:collapse}.preview td,.preview th{border:1px solid var(--line);padding:5px 8px}
+.checklist{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,250px),1fr));gap:8px;max-height:300px;overflow:auto;padding:2px}.checkitem{display:flex;align-items:flex-start;gap:9px;padding:10px;border:1px solid var(--line);border-radius:10px;background:white}.checkitem input{margin-top:5px}.checkitem span{min-width:0}.checkitem small{display:block;color:var(--muted);overflow-wrap:anywhere}.empty,.notice{padding:12px;border-radius:10px;background:#f5f8fc;color:var(--muted)}.notice.error{background:#fff0ed;color:#9f3023;border:1px solid #ffd5ce}.notice.success{background:#edf9f0;color:#24653b;border:1px solid #c9ecd1}.statusline{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.pill{font-size:12px;border-radius:99px;padding:3px 9px;background:#edf5ff;color:#2359a8}.actions{display:flex;gap:8px;flex-wrap:wrap}.hidden{display:none!important}.footer{color:var(--muted);font-size:12px;text-align:center;padding:10px}
+@media(max-width:900px){.layout{grid-template-columns:1fr}.sidebar{display:grid;grid-template-columns:1fr 1fr;padding:12px}.brand{grid-column:1/-1;padding:3px 8px 8px}.side-note{display:none}.editor-grid{grid-template-columns:1fr}}
+@media(max-width:560px){.layout{width:calc(100% - 16px);margin:8px auto;gap:8px}.sidebar{gap:4px}.nav{padding:8px;font-size:13px}.panel{border-radius:15px}.topline{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">知序</div>
+    <a class="nav" href="../index.html">⌂　主页</a>
+    <a class="nav" href="./index.html">⌘　数学知识树</a>
+    <a class="nav active" href="./editor.html">✎　数学编辑器</a>
+    <a class="nav" href="../articles.html">▤　文章列表</a>
+    <div class="side-note">让知识点、题目与解法彼此连接。</div>
+  </aside>
+  <main>
+    <div class="topline">
+      <div><div class="crumb"><a href="./index.html">数学知识树</a>　/　数学编辑器</div><h1>数学编辑器</h1><p class="sub">创建知识点，录入题目，并将题目关联到多个知识点。</p></div>
+      <div class="actions"><a class="btn" href="./index.html">返回知识树</a><button class="btn" id="newBtn" type="button">新建内容</button></div>
+    </div>
+    <section class="panel">
+      <div id="authStatus" class="notice">正在检查登录状态……</div>
+      <div id="globalStatus" class="notice hidden" role="status"></div>
+    </section>
+    <section class="panel">
+      <div class="tabs" role="tablist" aria-label="内容类型">
+        <button class="tab active" id="nodeTab" type="button">知识点</button>
+        <button class="tab" id="problemTab" type="button">题目与题解</button>
+      </div>
+      <p class="sub" id="modeDescription">创建或编辑知识树中的节点。</p>
+    </section>
+    <form id="nodeForm" class="panel">
+      <div class="row" style="margin-bottom:16px">
+        <div class="field grow"><label for="nTitle">知识点标题 *</label><input id="nTitle" maxlength="180" required placeholder="例如：相似三角形"></div>
+        <div class="field grow"><label for="nSlug">唯一标识 slug *</label><input id="nSlug" maxlength="180" required pattern="[A-Za-z0-9][A-Za-z0-9_-]*" placeholder="例如：similar-triangles"><small>只使用英文字母、数字、连字符和下划线；必须全站唯一。</small></div>
+      </div>
+      <div class="row" style="margin-bottom:16px">
+        <div class="field grow"><label for="nParent">上级知识点</label><select id="nParent"><option value="">无（顶层知识点）</option></select><small>新建子知识点时选择所属分支。</small></div>
+        <div class="field"><label for="nType">节点类型</label><select id="nType"><option value="branch">知识分支</option><option value="concept">知识概念</option></select></div>
+        <div class="field"><label for="nStatus">状态</label><select id="nStatus"><option value="draft">草稿（仅自己可见）</option><option value="published">发布（公开可见）</option></select></div>
+      </div>
+      <div class="field" style="margin-bottom:16px"><label for="nSummary">简介</label><textarea id="nSummary" rows="3" placeholder="用几句话概括这个知识点。"></textarea></div>
+      <div class="field" style="margin-bottom:16px"><label for="nContent">详细内容（Markdown / LaTeX）</label><div class="toolbar" data-target="nContent"><button type="button" data-insert="## 标题\n">H2 标题</button><button type="button" data-before="**" data-after="**">加粗</button><button type="button" data-insert="\n---\n">分隔线</button><button type="button" data-insert="\n$$\n\n$$\n">公式块</button><button type="button" data-insert="\n- ">列表项</button></div><div class="editor-grid"><textarea class="large" id="nContent" placeholder="可以使用 Markdown；例如：\n\n## 定义\n\n若两个三角形的对应角相等，则……\n\n$$\\frac{a}{b}=\\frac{c}{d}$$"></textarea><div class="preview" id="nPreview">实时预览会显示在这里。</div></div><small class="hint">预览使用 Markdown 渲染；页面发布后，知识点详情页会显示内容。</small></div>
+      <div class="actions"><button class="btn primary" id="saveNode" type="submit">保存知识点</button><button class="btn" type="button" id="loadNodeBtn">载入已有知识点</button></div>
+    </form>
+    <form id="problemForm" class="panel hidden">
+      <div class="row" style="margin-bottom:16px">
+        <div class="field grow"><label for="pTitle">题目标题 *</label><input id="pTitle" maxlength="240" required placeholder="例如：一道相似三角形证明题"></div>
+        <div class="field grow"><label for="pSlug">唯一标识 slug *</label><input id="pSlug" maxlength="180" required pattern="[A-Za-z0-9][A-Za-z0-9_-]*" placeholder="例如：geometry-similarity-001"><small>必须全站唯一。</small></div>
+      </div>
+      <div class="row" style="margin-bottom:16px">
+        <div class="field"><label for="pDifficulty">难度</label><select id="pDifficulty"><option value="basic">基础</option><option value="intermediate" selected>提高</option><option value="advanced">进阶</option></select></div>
+        <div class="field grow"><label for="pSource">题目来源</label><input id="pSource" maxlength="300" placeholder="例如：自编 / 某年竞赛"></div>
+        <div class="field"><label for="pStatus">状态</label><select id="pStatus"><option value="draft">草稿（仅自己可见）</option><option value="published">发布（公开可见）</option></select></div>
+      </div>
+      <div class="field" style="margin-bottom:16px"><label for="pStatement">题目内容 *</label><textarea id="pStatement" class="statement" required placeholder="填写完整题面，支持 Markdown 和 LaTeX。"></textarea></div>
+      <div class="field" style="margin-bottom:16px"><label for="pAnswer">答案（可选）</label><textarea id="pAnswer" rows="4" placeholder="简洁答案或关键结论。"></textarea></div>
+      <div class="field" style="margin-bottom:16px"><label for="pSolution">详细题解</label><div class="toolbar" data-target="pSolution"><button type="button" data-insert="## 思路\n\n">思路标题</button><button type="button" data-before="**" data-after="**">加粗</button><button type="button" data-insert="\n$$\n\n$$\n">公式块</button><button type="button" data-insert="\n1. ">有序列表项</button></div><div class="editor-grid"><textarea class="large" id="pSolution" placeholder="逐步写出证明或解题过程。"></textarea><div class="preview" id="pPreview">实时预览会显示在这里。</div></div></div>
+      <div class="field" style="margin-bottom:16px"><label>关联知识点（可多选）</label><div class="hint">至少可以选择一个主知识点；其他知识点可设为辅助或拓展。若保存关联失败，请检查 Supabase RLS 策略。</div><div id="knowledgeChecks" class="checklist"><div class="empty">正在加载知识点列表……</div></div></div>
+      <div class="actions"><button class="btn primary" id="saveProblem" type="submit">保存题目与关联</button><button class="btn" type="button" id="loadProblemBtn">载入已有题目</button></div>
+    </form>
+    <section class="panel">
+      <h2>已有内容</h2>
+      <div class="row" style="margin-bottom:12px"><div class="field grow"><label for="existingType">内容类型</label><select id="existingType"><option value="node">知识点</option><option value="problem">题目</option></select></div><div class="field grow"><label for="existingSearch">搜索标题或 slug</label><input id="existingSearch" placeholder="输入关键词过滤"></div><button class="btn" id="refreshList" type="button">刷新列表</button></div>
+      <div id="existingList" class="checklist"><div class="empty">正在加载……</div></div>
+    </section>
+    <div class="footer">知序 · 数学知识树</div>
+  </main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const db=window.zhixuSupabase;
+  let currentUser=null, nodes=[], problems=[], editingNodeId=null, editingProblemId=null, activeMode='node';
+  function status(message,type=''){const el=$('globalStatus');el.textContent=message;el.className='notice'+(type?' '+type:'');}
+  function clearStatus(){ $('globalStatus').className='notice hidden';$('globalStatus').textContent='';}
+  function renderMd(src){let raw=window.marked&&typeof marked.parse==='function'?marked.parse(src||''):esc(src||'').replace(/\n/g,'<br>');return window.DOMPurify?DOMPurify.sanitize(raw):raw;}
+  function updatePreview(inputId,previewId){const el=$(previewId);el.innerHTML=renderMd($(inputId).value)||'<span class="hint">预览为空。</span>';if(window.renderMathInElement){try{renderMathInElement(el,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\[',right:'\\]',display:true},{left:'\\(',right:'\\)',display:false},{left:'$',right:'$',display:false}],throwOnError:false});}catch(e){console.warn('公式预览失败',e);}}}
+  function slugify(s){return String(s||'').trim().toLowerCase().replace(/[^a-z0-9_-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,180);}
+  function resetNode(){editingNodeId=null;$('nodeForm').reset();$('nStatus').value='draft';$('nParent').value='';$('saveNode').textContent='保存知识点';$('nPreview').innerHTML='实时预览会显示在这里。';}
+  function resetProblem(){editingProblemId=null;$('problemForm').reset();$('pStatus').value='draft';$('pDifficulty').value='intermediate';$('saveProblem').textContent='保存题目与关联';document.querySelectorAll('#knowledgeChecks input[type=checkbox]').forEach(x=>x.checked=false);document.querySelectorAll('#knowledgeChecks select').forEach(x=>x.value='supporting');$('pPreview').innerHTML='实时预览会显示在这里。';}
+  function setMode(mode){activeMode=mode;$('nodeTab').classList.toggle('active',mode==='node');$('problemTab').classList.toggle('active',mode==='problem');$('nodeForm').classList.toggle('hidden',mode!=='node');$('problemForm').classList.toggle('hidden',mode!=='problem');$('modeDescription').textContent=mode==='node'?'创建或编辑知识树中的节点。':'录入题目、答案与题解，并关联多个知识点。';clearStatus();}
+  function parentOptions(selected=''){const opts=['<option value="">无（顶层知识点）</option>'];nodes.filter(n=>n.id!==editingNodeId).forEach(n=>opts.push('<option value="'+esc(n.id)+'" '+(n.id===selected?'selected':'')+'>'+esc(n.title)+' · '+esc(n.slug)+'</option>'));$('nParent').innerHTML=opts.join('');}
+  function renderKnowledgeChecks(selectedMap={}){
+    if(!nodes.length){$('knowledgeChecks').innerHTML='<div class="empty">没有可选知识点。请先创建知识点，或检查数据库读取权限。</div>';return;}
+    $('knowledgeChecks').innerHTML=nodes.map(n=>'<label class="checkitem"><input type="checkbox" value="'+esc(n.id)+'" '+(selectedMap[n.id]?'checked':'')+'><span>'+esc(n.title)+'<small>'+esc(n.slug)+' · '+(n.status==='published'?'已发布':'草稿')+'</small><select aria-label="'+esc(n.title)+'关联类型" data-relation-for="'+esc(n.id)+'" '+(selectedMap[n.id]?'':'disabled')+'><option value="main" '+(selectedMap[n.id]==='main'?'selected':'')+'>主知识点</option><option value="supporting" '+(selectedMap[n.id]==='supporting'||!selectedMap[n.id]?'selected':'')+'>辅助知识点</option><option value="extension" '+(selectedMap[n.id]==='extension'?'selected':'')+'>拓展知识点</option></select></span></label>').join('');
+    $('knowledgeChecks').querySelectorAll('input[type=checkbox]').forEach(ch=>ch.addEventListener('change',()=>{const sel=$('knowledgeChecks').querySelector('[data-relation-for="'+ch.value+'"]');if(sel)sel.disabled=!ch.checked;}));
+  }
+  async function loadNodes(){
+    const {data,error}=await db.from('knowledge_nodes').select('id,parent_id,slug,title,summary,node_type,sort_order,status,user_id').order('sort_order',{ascending:true}).order('title',{ascending:true});
+    if(error)throw error;nodes=data||[];parentOptions();renderKnowledgeChecks();return nodes;
+  }
+  async function loadProblems(){
+    const {data,error}=await db.from('problems').select('id,slug,title,statement,answer,solution,difficulty,source,status,user_id').order('updated_at',{ascending:false});
+    if(error)throw error;problems=data||[];return problems;
+  }
+  function renderExisting(){
+    const type=$('existingType').value, q=$('existingSearch').value.trim().toLowerCase();
+    const arr=(type==='node'?nodes:problems).filter(x=>(x.title||'').toLowerCase().includes(q)||(x.slug||'').toLowerCase().includes(q));
+    if(!arr.length){$('existingList').innerHTML='<div class="empty">没有匹配的内容。草稿是否可见取决于登录用户与 RLS 策略。</div>';return;}
+    $('existingList').innerHTML=arr.map(x=>'<div class="checkitem"><span class="grow"><strong>'+esc(x.title||'未命名')+'</strong><small>'+esc(x.slug)+' · '+(x.status==='published'?'已发布':'草稿')+'</small></span><button class="btn" type="button" data-edit-type="'+type+'" data-edit-id="'+esc(x.id)+'">编辑</button></div>').join('');
+    $('existingList').querySelectorAll('[data-edit-id]').forEach(b=>b.addEventListener('click',()=>b.dataset.editType==='node'?editNode(b.dataset.editId):editProblem(b.dataset.editId)));
+  }
+  async function saveNode(e){
+    e.preventDefault();clearStatus();if(!currentUser){status('请先登录后再保存。','error');return;}
+    const title=$('nTitle').value.trim(),slug=$('nSlug').value.trim();
+    if(!title||!slug){status('标题和 slug 均为必填项。','error');return;}
+    const parent=$('nParent').value||null;if(parent===editingNodeId){status('知识点不能把自己设为上级节点。','error');return;}
+    const payload={title,slug,parent_id:parent,node_type:$('nType').value,summary:$('nSummary').value.trim(),content:$('nContent').value,status:$('nStatus').value,user_id:currentUser.id,updated_at:new Date().toISOString()};
+    $('saveNode').disabled=true;
+    try{
+      let result;
+      if(editingNodeId)result=await db.from('knowledge_nodes').update(payload).eq('id',editingNodeId).select('id').single();
+      else result=await db.from('knowledge_nodes').insert(payload).select('id').single();
+      if(result.error)throw result.error;
+      editingNodeId=result.data.id;$('saveNode').textContent='更新知识点';
+      status('知识点已保存。ID：'+editingNodeId,'success');
+      await loadNodes();await loadExisting();
+    }catch(err){console.error(err);status('保存失败：'+(err.message||String(err))+'。请检查登录状态、slug 是否重复及 RLS 策略。','error');}
+    finally{$('saveNode').disabled=false;}
+  }
+  function collectRelations(){
+    const selected=[];
+    $('knowledgeChecks').querySelectorAll('input[type=checkbox]:checked').forEach(ch=>{
+      const sel=$('knowledgeChecks').querySelector('[data-relation-for="'+ch.value+'"]');
+      selected.push({knowledge_id:ch.value,relation_type:sel?sel.value:'supporting'});
+    });
+    if(selected.length&&!selected.some(x=>x.relation_type==='main'))selected[0].relation_type='main';
+    const mains=selected.filter(x=>x.relation_type==='main');if(mains.length>1)throw new Error('请只选择一个主知识点。');
+    return selected;
+  }
+  async function saveProblem(e){
+    e.preventDefault();clearStatus();if(!currentUser){status('请先登录后再保存。','error');return;}
+    const title=$('pTitle').value.trim(),slug=$('pSlug').value.trim(),statement=$('pStatement').value.trim();
+    if(!title||!slug||!statement){status('题目标题、slug 和题目内容均为必填项。','error');return;}
+    let relations;try{relations=collectRelations();}catch(err){status(err.message,'error');return;}
+    const payload={title,slug,statement,answer:$('pAnswer').value,solution:$('pSolution').value,difficulty:$('pDifficulty').value,source:$('pSource').value.trim(),status:$('pStatus').value,user_id:currentUser.id,updated_at:new Date().toISOString()};
+    $('saveProblem').disabled=true;
+    try{
+      let result;
+      if(editingProblemId)result=await db.from('problems').update(payload).eq('id',editingProblemId).select('id').single();
+      else result=await db.from('problems').insert(payload).select('id').single();
+      if(result.error)throw result.error;
+      const id=result.data.id;
+      const del=await db.from('problem_knowledge').delete().eq('problem_id',id);
+      if(del.error)throw del.error;
+      if(relations.length){const rows=relations.map(x=>({problem_id:id,knowledge_id:x.knowledge_id,relation_type:x.relation_type}));const ins=await db.from('problem_knowledge').insert(rows);if(ins.error)throw ins.error;}
+      editingProblemId=id;$('saveProblem').textContent='更新题目与关联';
+      status('题目已保存，关联知识点 '+relations.length+' 个。ID：'+id,'success');
+      await loadProblems();await loadExisting();
+    }catch(err){console.error(err);status('保存题目或关联失败：'+(err.message||String(err))+'。请检查 slug 是否重复，以及 problems / problem_knowledge 的 RLS 策略是否允许当前用户操作。','error');}
+    finally{$('saveProblem').disabled=false;}
+  }
+  function editNode(id){
+    const n=nodes.find(x=>x.id===id);if(!n)return;
+    setMode('node');editingNodeId=id;parentOptions(n.parent_id||'');
+    $('nTitle').value=n.title||'';$('nSlug').value=n.slug||'';$('nType').value=n.node_type||'branch';$('nStatus').value=n.status||'draft';$('nSummary').value=n.summary||'';$('nContent').value=n.content||'';$('saveNode').textContent='更新知识点';updatePreview('nContent','nPreview');status('正在编辑知识点：'+n.title);
+    window.scrollTo({top:$('nodeForm').getBoundingClientRect().top+window.scrollY-20,behavior:'smooth'});
+  }
+  async function editProblem(id){
+    const p=problems.find(x=>x.id===id);if(!p)return;
+    setMode('problem');editingProblemId=id;$('pTitle').value=p.title||'';$('pSlug').value=p.slug||'';$('pStatement').value=p.statement||'';$('pAnswer').value=p.answer||'';$('pSolution').value=p.solution||'';$('pDifficulty').value=p.difficulty||'intermediate';$('pSource').value=p.source||'';$('pStatus').value=p.status||'draft';$('saveProblem').textContent='更新题目与关联';
+    const {data,error}=await db.from('problem_knowledge').select('knowledge_id,relation_type').eq('problem_id',id);
+    if(error){status('题目已载入，但读取知识点关联失败：'+error.message,'error');return;}
+    const map={};(data||[]).forEach(x=>map[x.knowledge_id]=x.relation_type);renderKnowledgeChecks(map);updatePreview('pSolution','pPreview');
+    status('正在编辑题目：'+(p.title||p.slug));window.scrollTo({top:$('problemForm').getBoundingClientRect().top+window.scrollY-20,behavior:'smooth'});
+  }
+  async function loadExisting(){
+    try{await loadNodes();await loadProblems();renderExisting();}
+    catch(err){console.error(err);$('existingList').innerHTML='<div class="empty">加载已有内容失败：'+esc(err.message||String(err))+'</div>';}
+  }
+  function addToolbarEvents(){
+    document.querySelectorAll('.toolbar').forEach(bar=>bar.querySelectorAll('button').forEach(btn=>btn.addEventListener('click',()=>{
+      const ta=$(bar.dataset.target);if(!ta)return;ta.focus();const start=ta.selectionStart,end=ta.selectionEnd,val=ta.value;
+      if(btn.dataset.before!==undefined){const chosen=val.slice(start,end)||'文本';const replacement=btn.dataset.before+chosen+btn.dataset.after;ta.setRangeText(replacement,start,end,'select');}
+      else{const insert=btn.dataset.insert||'';ta.setRangeText(insert,start,end,'end');}
+      ta.dispatchEvent(new Event('input',{bubbles:true}));
+    })));
+  }
+  async function init(){
+    if(!db){$('authStatus').className='notice error';$('authStatus').textContent='Supabase 客户端未加载，请检查 ../supabase.js 和 CDN。';$('nodeForm').classList.add('hidden');$('problemForm').classList.add('hidden');return;}
+    try{
+      const {data,error}=await db.auth.getSession();if(error)throw error;
+      currentUser=data.session&&data.session.user?data.session.user:null;
+      if(!currentUser){$('authStatus').className='notice error';$('authStatus').innerHTML='当前未登录。请先在知序现有的文章编辑器中登录，再返回此页面。<br><a href="../editor.html">打开文章编辑器登录</a>。登录后刷新本页。';$('nodeForm').classList.add('hidden');$('problemForm').classList.add('hidden');}
+      else{$('authStatus').className='notice success';$('authStatus').textContent='已登录，可以创建和编辑数学内容。';await loadExisting();const params=new URLSearchParams(location.search);if(params.get('type')==='problem')setMode('problem');if(params.get('node_id'))editNode(params.get('node_id'));if(params.get('problem_id'))await editProblem(params.get('problem_id'));}
+    }catch(err){console.error(err);$('authStatus').className='notice error';$('authStatus').textContent='检查登录状态失败：'+(err.message||String(err));}
+  }
+  $('nodeTab').addEventListener('click',()=>setMode('node'));$('problemTab').addEventListener('click',()=>setMode('problem'));
+  $('nodeForm').addEventListener('submit',saveNode);$('problemForm').addEventListener('submit',saveProblem);
+  $('newBtn').addEventListener('click',()=>{if(activeMode==='node')resetNode();else resetProblem();clearStatus();window.scrollTo({top:0,behavior:'smooth'});});
+  $('loadNodeBtn').addEventListener('click',()=>{setMode('node');$('existingType').value='node';renderExisting();$('existingSearch').focus();$('existingList').scrollIntoView({behavior:'smooth',block:'center'});});
+  $('loadProblemBtn').addEventListener('click',()=>{setMode('problem');$('existingType').value='problem';renderExisting();$('existingSearch').focus();$('existingList').scrollIntoView({behavior:'smooth',block:'center'});});
+  $('existingType').addEventListener('change',renderExisting);$('existingSearch').addEventListener('input',renderExisting);$('refreshList').addEventListener('click',loadExisting);
+  $('nTitle').addEventListener('input',()=>{if(!editingNodeId&&!$('nSlug').dataset.touched)$('nSlug').value=slugify($('nTitle').value);});
+  $('pTitle').addEventListener('input',()=>{if(!editingProblemId&&!$('pSlug').dataset.touched)$('pSlug').value=slugify($('pTitle').value);});
+  $('nSlug').addEventListener('input',()=>{$('nSlug').dataset.touched='1';});$('pSlug').addEventListener('input',()=>{$('pSlug').dataset.touched='1';});
+  $('nContent').addEventListener('input',()=>updatePreview('nContent','nPreview'));$('pSolution').addEventListener('input',()=>updatePreview('pSolution','pPreview'));
+  $('nTitle').addEventListener('input',()=>{if(!$('nSlug').value)$('nSlug').dataset.touched='';});$('pTitle').addEventListener('input',()=>{if(!$('pSlug').value)$('pSlug').dataset.touched='';});
+  addToolbarEvents();init();
+})();
+</script>
+</body>
+</html>
