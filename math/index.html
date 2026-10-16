@@ -39,7 +39,7 @@ const sidebar=document.getElementById('sidebar');
 document.getElementById('toggle').addEventListener('click',function(){sidebar.classList.toggle('open');});
 document.querySelector('.main').addEventListener('click',function(e){if(window.innerWidth<=760&&sidebar.classList.contains('open')&&!e.target.closest('#toggle'))sidebar.classList.remove('open');});
 const tree=document.getElementById('tree'),count=document.getElementById('node-count');
-const icons={'代数':'代','几何':'几','数论':'数','组合数学':'组','概率与统计':'概','数学方法与综合专题':'法'};
+const icons={'代数':'A','几何':'G','数论':'N','组合数学':'C','概率与统计':'P','数学方法与综合专题':'M'};
 function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function renderNode(n){return '<a class="node-link" href="knowledge.html?id='+encodeURIComponent(n.id)+'"><span class="node-dot"></span><span class="node-text"><span class="node-title">'+esc(n.title)+'</span>'+(n.summary?'<div class="node-summary">'+esc(n.summary)+'</div>':'')+'</span></a>';}
 function render(nodes){
