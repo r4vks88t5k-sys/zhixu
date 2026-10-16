@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>题目详情 · 知序</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<style>
+:root{--bg:#f3f7fc;--line:#dce6f2;--ink:#20324d;--muted:#71829b;--blue:#2869d8;--shadow:0 12px 34px #26466d12}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#eaf3ff 0,#f3f7fc 340px,#f3f7fc 100%);color:var(--ink);font:15px/1.75 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif}
+a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
+.layout{width:min(1500px,calc(100% - 32px));min-height:calc(100vh - 32px);margin:16px auto;display:grid;grid-template-columns:230px minmax(0,1fr);gap:18px}
+.sidebar,.panel{background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow)}
+.sidebar{padding:22px 14px;display:flex;flex-direction:column;gap:8px}.brand{font-size:22px;font-weight:800;letter-spacing:.04em;padding:0 10px 20px}.nav{display:block;padding:10px 12px;border-radius:11px;color:var(--ink)}.nav:hover,.nav.active{background:#eaf2ff;text-decoration:none;color:#174fae}.side-note{margin-top:auto;padding:12px;color:var(--muted);font-size:12px}
+main{min-width:0;padding:8px 0 24px}.topline{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:8px 4px 18px}.crumb{color:var(--muted);font-size:13px}.actions{display:flex;gap:8px;flex-wrap:wrap}
+.panel{padding:clamp(20px,4vw,38px);margin-bottom:16px}
+h1{font-size:clamp(27px,4vw,38px);line-height:1.35;margin:12px 0}h2{font-size:20px;margin:0 0 16px}h3{font-size:17px}
+.pill{display:inline-flex;align-items:center;border:1px solid #cfe0f8;background:#edf5ff;color:#2359a8;border-radius:999px;padding:3px 10px;font-size:12px}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 0}.summary{color:#526781;margin:0}.content{overflow-wrap:anywhere}.content h1,.content h2,.content h3{line-height:1.45}.content pre{overflow:auto;background:#f5f8fc;border:1px solid var(--line);padding:14px;border-radius:12px}.content code{background:#f0f4fa;border-radius:4px;padding:2px 4px}.content pre code{background:transparent;padding:0}.content blockquote{margin:12px 0;padding:4px 16px;border-left:3px solid #8fb5f0;color:#5d7089}.content img{max-width:100%;height:auto}.content table{border-collapse:collapse;max-width:100%;display:block;overflow:auto}.content th,.content td{border:1px solid var(--line);padding:7px 10px}.content li{margin:4px 0}.empty,.status{padding:14px;border-radius:12px;background:#f6f9fd;color:var(--muted)}.error{background:#fff3f1;color:#a33325;border:1px solid #ffd6d0}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr));gap:12px}.item{display:block;border:1px solid var(--line);border-radius:14px;padding:14px;background:#fff;color:var(--ink)}.item:hover{border-color:#a8c7f2;text-decoration:none}.item strong{display:block}.item small{display:block;color:var(--muted);margin-top:4px;overflow-wrap:anywhere}.btn{display:inline-block;border:1px solid var(--line);background:white;color:var(--ink);padding:8px 12px;border-radius:10px;cursor:pointer;font:inherit}.btn:hover{background:#f2f7ff;text-decoration:none}.footer{text-align:center;color:var(--muted);font-size:12px;padding:8px}
+@media(max-width:760px){.layout{grid-template-columns:1fr;width:calc(100% - 20px);margin:10px auto;gap:10px}.sidebar{padding:12px;display:grid;grid-template-columns:1fr 1fr;gap:5px}.brand{grid-column:1/-1;padding:3px 8px 8px}.side-note{display:none}.topline{align-items:flex-start;flex-direction:column}.panel{border-radius:16px}}
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">知序</div>
+    <a class="nav" href="../index.html">⌂　主页</a>
+    <a class="nav" href="./index.html">⌘　数学知识树</a>
+    <a class="nav" href="./editor.html">✎　数学编辑器</a>
+    <a class="nav" href="../articles.html">▤　文章列表</a>
+    <div class="side-note">一道题可以连接多个知识点，让问题与方法彼此照亮。</div>
+  </aside>
+  <main>
+    <div class="topline">
+      <div class="crumb"><a href="./index.html">数学知识树</a>　/　题目详情</div>
+      <div class="actions"><a class="btn" href="./index.html">返回知识树</a><a class="btn" id="editLink" href="./editor.html">编辑器</a></div>
+    </div>
+    <section class="panel" id="headPanel"><div class="status" id="loading">正在加载题目……</div></section>
+    <section class="panel"><h2>题目</h2><div id="statement" class="content"><div class="empty">等待加载。</div></div></section>
+    <section class="panel" id="answerPanel"><h2>答案</h2><div id="answer" class="content"><div class="empty">等待加载。</div></div></section>
+    <section class="panel"><h2>详细题解</h2><div id="solution" class="content"><div class="empty">等待加载。</div></div></section>
+    <section class="panel"><h2>关联知识点</h2><div id="knowledge"><div class="empty">正在加载……</div></div></section>
+    <footer class="footer">知序 · 数学知识树</footer>
+  </main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const db=window.zhixuSupabase;
+  const params=new URLSearchParams(location.search),problemId=params.get('id');
+  function showError(msg){
+    $('loading').className='status error';$('loading').textContent=msg;
+    ['statement','answer','solution','knowledge'].forEach(id=>$(id).innerHTML='<div class="empty">暂时无法显示。</div>');
+  }
+  function md(src){
+    const raw=window.marked&&typeof marked.parse==='function'?marked.parse(src||''):esc(src||'').replace(/\n/g,'<br>');
+    return window.DOMPurify?DOMPurify.sanitize(raw):raw;
+  }
+  function renderMath(){
+    if(typeof window.renderMathInElement!=='function')return;
+    ['statement','answer','solution'].forEach(id=>{
+      try{renderMathInElement($(id),{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\[',right:'\\]',display:true},{left:'\\(',right:'\\)',display:false},{left:'$',right:'$',display:false}],throwOnError:false,ignoredTags:['script','noscript','style','textarea','pre','code','option']});}
+      catch(e){console.warn('公式渲染失败：',e);}
+    });
+  }
+  async function load(){
+    if(!problemId){showError('缺少题目 ID。请从知识点详情页或数学编辑器中打开题目。');return;}
+    if(!db){showError('Supabase 客户端未加载，请检查 ../supabase.js 和网络连接。');return;}
+    const {data:p,error}=await db.from('problems')
+      .select('id,slug,title,statement,answer,solution,difficulty,source,status,created_at,updated_at')
+      .eq('id',problemId).eq('status','published').maybeSingle();
+    if(error){console.error('读取题目失败：',error);showError('读取题目失败：'+error.message+'。请检查 Supabase 配置、RLS SELECT 策略和网络连接。');return;}
+    if(!p){showError('没有找到这道已发布的题目。它可能不存在、尚未发布，或当前访问权限不足。');return;}
+    document.title=(p.title||'题目详情')+' · 知序';
+    const difficulty={basic:'基础',intermediate:'提高',advanced:'进阶'};
+    $('loading').outerHTML='<div id="problemHeader"><span class="pill">数学题目</span><h1>'+esc(p.title||'未命名题目')+'</h1><p class="summary">题目来源：'+esc(p.source||'未注明')+'</p><div class="meta"><span class="pill">难度：'+esc(difficulty[p.difficulty]||p.difficulty||'未分类')+'</span><span class="pill">已发布</span><span class="pill">slug：'+esc(p.slug)+'</span></div></div>';
+    $('statement').innerHTML=md(p.statement||'暂无题目内容。');
+    $('answer').innerHTML=p.answer&&p.answer.trim()?md(p.answer):'<div class="empty">暂无单独答案。</div>';
+    $('solution').innerHTML=p.solution&&p.solution.trim()?md(p.solution):'<div class="empty">暂无详细题解。</div>';
+    $('editLink').href='./editor.html?type=problem&problem_id='+encodeURIComponent(p.id);
+    const {data:links,error:linkError}=await db.from('problem_knowledge').select('knowledge_id,relation_type').eq('problem_id',p.id);
+    if(linkError){console.error('读取知识点关联失败：',linkError);$('knowledge').innerHTML='<div class="empty">关联知识点读取失败：'+esc(linkError.message)+'</div>';renderMath();return;}
+    if(!links||!links.length){$('knowledge').innerHTML='<div class="empty">这道题暂时没有关联知识点。</div>';renderMath();return;}
+    const ids=[...new Set(links.map(x=>x.knowledge_id))];
+    const {data:knodes,error:nodeError}=await db.from('knowledge_nodes').select('id,slug,title,summary,status').in('id',ids).eq('status','published');
+    if(nodeError){console.error('读取知识点失败：',nodeError);$('knowledge').innerHTML='<div class="empty">知识点读取失败：'+esc(nodeError.message)+'</div>';renderMath();return;}
+    if(!knodes||!knodes.length){$('knowledge').innerHTML='<div class="empty">关联的知识点尚未发布或当前不可见。</div>';renderMath();return;}
+    const relationMap={};links.forEach(x=>relationMap[x.knowledge_id]=x.relation_type);
+    const relationNames={main:'主知识点',supporting:'辅助知识点',extension:'拓展知识点'};
+    $('knowledge').innerHTML='<div class="grid">'+knodes.map(n=>'<a class="item" href="./knowledge.html?id='+encodeURIComponent(n.id)+'"><strong>'+esc(n.title)+'</strong><span class="pill">'+esc(relationNames[relationMap[n.id]]||'关联知识点')+'</span><small>'+esc(n.summary||n.slug)+'</small></a>').join('')+'</div>';
+    renderMath();
+  }
+  load().catch(e=>{console.error(e);showError('页面运行时发生错误：'+(e.message||String(e)));});
+})();
+</script>
+</body>
+</html>
