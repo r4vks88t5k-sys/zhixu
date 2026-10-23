@@ -45,7 +45,7 @@ h1{font-size:clamp(25px,3vw,34px);margin:0}h2{font-size:19px;margin:0 0 16px}.su
         <button class="tab" id="problemTab" type="button">题目与题解</button>
       </div>
       <p class="sub" id="modeDescription">创建或编辑知识树中的节点。</p>
-      <div class="autosave-row"><label for="autosaveInterval">自动保存</label><select id="autosaveInterval"><option value="30">每 30 秒</option><option value="60" selected>每 1 分钟</option><option value="300">每 5 分钟</option><option value="600">每 10 分钟</option><option value="0">关闭</option></select><span id="autosaveStatus" class="hint">自动保存会保存当前状态；新题题号可自动生成或手动指定，标签与知识点关联一并保存。</span></div>
+      <div class="autosave-row"><label for="autosaveInterval">自动保存</label><select id="autosaveInterval"><option value="30">每 30 秒</option><option value="60" selected>每 1 分钟</option><option value="300">每 5 分钟</option><option value="600">每 10 分钟</option><option value="0">关闭</option></select><span id="autosaveStatus" class="hint">自动保存会保存当前状态；题号由数据库生成，标签与知识点关联一并保存。</span></div>
     </section>
     <form id="nodeForm" class="panel">
       <div class="row" style="margin-bottom:16px">
@@ -62,14 +62,13 @@ h1{font-size:clamp(25px,3vw,34px);margin:0}h2{font-size:19px;margin:0 0 16px}.su
       <div class="actions"><button class="btn primary" id="saveNode" type="submit">保存知识点</button><button class="btn" type="button" id="loadNodeBtn">载入已有知识点</button></div>
     </form>
     <form id="problemForm" class="panel hidden">
-      <div id="problemNumberNotice" class="notice" style="margin-bottom:16px">新建题目时，题号可留空并由数据库自动分配；也可填写数字或 P1001 格式手动指定。编辑已有题目时，可修改当前题号。题号必须为正整数且不能重复。</div>
-      <div class="field" style="margin-bottom:16px"><label for="pProblemNo">题号</label><input id="pProblemNo" inputmode="numeric" autocomplete="off" placeholder="留空自动分配；或输入 P1001 / 1001"><small>只填写数字（如 1001）或 P1001。新建题目留空时自动分配；修改已有题目时请保留或填写新的题号。题号重复时保存会失败。</small></div>
+      <div id="problemNumberNotice" class="notice" style="margin-bottom:16px">新题的题号由数据库自动分配，从 P1001 开始；编辑已有题目时题号不会改变。</div>
       <div class="row" style="margin-bottom:16px">
         <div class="field grow"><label for="pTitle">题目标题 *</label><input id="pTitle" maxlength="240" required placeholder="例如：一道相似三角形证明题"></div>
         <div class="field grow"><label for="pSlug">唯一标识 slug *</label><input id="pSlug" maxlength="180" required pattern="[A-Za-z0-9][A-Za-z0-9_-]*" placeholder="例如：geometry-similarity-001"><small>必须全站唯一。</small></div>
       </div>
       <div class="row" style="margin-bottom:16px">
-        <div class="field"><label for="pDifficulty">难度</label><select id="pDifficulty"><option value="basic">基础</option><option value="intermediate" selected>提高</option><option value="advanced">进阶</option></select></div>
+        <div class="field"><label for="pDifficulty">难度</label><select id="pDifficulty"><option value="introductory" selected>入门</option><option value="league_easy">联赛易</option><option value="league_medium">联赛中</option><option value="league_hard">联赛难</option><option value="training_easy">集训队易</option><option value="training_hard">集训队难</option><option value="extreme">极难</option></select></div>
         <div class="field grow"><label for="pSource">题目来源</label><input id="pSource" maxlength="300" placeholder="例如：自编 / 某年竞赛"></div>
         <div class="field"><label for="pStatus">状态</label><select id="pStatus"><option value="draft">草稿（仅自己可见）</option><option value="published">发布（公开可见）</option></select></div>
       </div>
@@ -115,7 +114,7 @@ h1{font-size:clamp(25px,3vw,34px);margin:0}h2{font-size:19px;margin:0 0 16px}.su
   function updatePreview(inputId,previewId){const el=$(previewId);el.innerHTML=renderMd($(inputId).value)||'<span class="hint">预览为空。</span>';if(window.renderMathInElement){try{renderMathInElement(el,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\[',right:'\\]',display:true},{left:'\\(',right:'\\)',display:false},{left:'$',right:'$',display:false}],throwOnError:false});}catch(e){console.warn('公式预览失败',e);}}}
   function slugify(s){return String(s||'').trim().toLowerCase().replace(/[^a-z0-9_-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,180);}
   function resetNode(){editingNodeId=null;dirty=false;$('nodeForm').reset();$('nStatus').value='draft';$('nParent').value='';$('saveNode').textContent='保存知识点';$('nPreview').innerHTML='实时预览会显示在这里。';}
-  function resetProblem(){editingProblemId=null;dirty=false;selectedTagIds=new Set();pendingTagNames=[];$('problemForm').reset();$('pStatus').value='draft';$('pDifficulty').value='intermediate';$('saveProblem').textContent='保存题目与关联';$('problemNumberNotice').textContent='新建题目时，题号可留空并由数据库自动分配；也可填写数字或 P1001 格式手动指定。编辑已有题目时，可修改当前题号。题号必须为正整数且不能重复。';document.querySelectorAll('#knowledgeChecks input[type=checkbox]').forEach(x=>x.checked=false);document.querySelectorAll('#knowledgeChecks select').forEach(x=>x.value='supporting');$('pPreview').innerHTML='实时预览会显示在这里。';renderTags();}
+  function resetProblem(){editingProblemId=null;dirty=false;selectedTagIds=new Set();pendingTagNames=[];$('problemForm').reset();$('pStatus').value='draft';$('pDifficulty').value='introductory';$('saveProblem').textContent='保存题目与关联';$('problemNumberNotice').textContent='新题的题号由数据库自动分配，从 P1001 开始；编辑已有题目时题号不会改变。';document.querySelectorAll('#knowledgeChecks input[type=checkbox]').forEach(x=>x.checked=false);document.querySelectorAll('#knowledgeChecks select').forEach(x=>x.value='supporting');$('pPreview').innerHTML='实时预览会显示在这里。';renderTags();}
   function setMode(mode){activeMode=mode;$('nodeTab').classList.toggle('active',mode==='node');$('problemTab').classList.toggle('active',mode==='problem');$('nodeForm').classList.toggle('hidden',mode!=='node');$('problemForm').classList.toggle('hidden',mode!=='problem');$('modeDescription').textContent=mode==='node'?'创建或编辑知识树中的节点。':'录入题目、答案与题解，并关联多个知识点。';clearStatus();}
   function parentOptions(selected=''){const opts=['<option value="">无（顶层知识点）</option>'];nodes.filter(n=>n.id!==editingNodeId).forEach(n=>opts.push('<option value="'+esc(n.id)+'" '+(n.id===selected?'selected':'')+'>'+esc(n.title)+' · '+esc(n.slug)+'</option>'));$('nParent').innerHTML=opts.join('');}
   function renderKnowledgeChecks(selectedMap={}){
@@ -215,12 +214,8 @@ h1{font-size:clamp(25px,3vw,34px);margin:0}h2{font-size:19px;margin:0 0 16px}.su
     if(e)e.preventDefault();if(saving)return;clearStatus();if(!currentUser){status('请先登录后再保存。','error');return;}
     const title=$('pTitle').value.trim(),slug=$('pSlug').value.trim(),statement=$('pStatement').value.trim();
     if(!title||!slug||!statement){status('题目标题、slug 和题目内容均为必填项。','error');return;}
-    const numberText=$('pProblemNo').value.trim();let problemNo=null;
-    if(!numberText&&editingProblemId){status('编辑已有题目时，题号不能为空。请填写当前题号或新的题号。','error');return;}
-    if(numberText){const numberMatch=numberText.match(/^[Pp]?(\d+)$/);if(!numberMatch){status('题号格式不正确。请输入正整数，例如 1001 或 P1001。','error');return;}problemNo=Number(numberMatch[1]);if(!Number.isSafeInteger(problemNo)||problemNo<=0){status('题号必须是正整数。','error');return;}}
     let relations;try{relations=collectRelations();}catch(err){status(err.message,'error');return;}
     const payload={title,slug,statement,answer:$('pAnswer').value,solution:$('pSolution').value,difficulty:$('pDifficulty').value,source:$('pSource').value.trim(),status:$('pStatus').value,user_id:currentUser.id,updated_at:new Date().toISOString()};
-    if(problemNo!==null)payload.problem_no=problemNo;
     $('saveProblem').disabled=true;saving=true;
     try{
       let result;
@@ -234,11 +229,11 @@ h1{font-size:clamp(25px,3vw,34px);margin:0}h2{font-size:19px;margin:0 0 16px}.su
       const del=await db.from('problem_knowledge').delete().eq('problem_id',id);
       if(del.error)throw del.error;
       if(relations.length){const rows=relations.map(x=>({problem_id:id,knowledge_id:x.knowledge_id,relation_type:x.relation_type}));const ins=await db.from('problem_knowledge').insert(rows);if(ins.error)throw ins.error;}
-      editingProblemId=id;$('pProblemNo').value=result.data.problem_no==null?'':'P'+result.data.problem_no;$('saveProblem').textContent='更新题目与关联';$('problemNumberNotice').textContent='当前题号：P'+result.data.problem_no+'。可以直接修改题号；题号不能与其他题目重复。';
+      editingProblemId=id;$('saveProblem').textContent='更新题目与关联';$('problemNumberNotice').textContent='当前题号：P'+result.data.problem_no+'（题号由数据库管理，不可修改）。';
       selectedTagIds=new Set(tagIds);pendingTagNames=[];await loadTags();
       markSaved(autosave);if(!autosave)status('题目已保存。题号：P'+result.data.problem_no+'；标签 '+tagIds.length+' 个；关联知识点 '+relations.length+' 个。','success');
       await loadProblems();await loadExisting();
-    }catch(err){console.error(err);let message=err.message||String(err);if(err.code==='23505'||/duplicate key|unique constraint/i.test(message)){if(/problem_no/i.test(message)||/problems_problem_no/i.test(message))message='题号重复：数据库中已经存在这个题号，请换一个未使用的题号。';else if(/slug/i.test(message))message='slug 重复：请换一个未使用的 slug。';}status((autosave?'自动保存题目失败：':'保存题目或关联失败：')+message+'。请检查题号是否重复、slug 是否重复，以及相关表的 RLS 策略是否允许当前用户操作。','error');}
+    }catch(err){console.error(err);status((autosave?'自动保存题目失败：':'保存题目或关联失败：')+(err.message||String(err))+'。请检查 slug 是否重复，以及 problems / problem_knowledge 的 RLS 策略是否允许当前用户操作。','error');}
     finally{$('saveProblem').disabled=false;saving=false;}
   }
   async function deleteContent(type,id){
@@ -272,7 +267,7 @@ h1{font-size:clamp(25px,3vw,34px);margin:0}h2{font-size:19px;margin:0 0 16px}.su
   }
   async function editProblem(id){
     const p=problems.find(x=>x.id===id);if(!p)return;
-    setMode('problem');editingProblemId=id;$('pProblemNo').value=p.problem_no==null?'':'P'+p.problem_no;$('problemNumberNotice').textContent='当前题号：P'+(p.problem_no||'—')+'。可以直接修改题号；题号不能与其他题目重复。';$('pTitle').value=p.title||'';$('pSlug').value=p.slug||'';$('pStatement').value=p.statement||'';$('pAnswer').value=p.answer||'';$('pSolution').value=p.solution||'';$('pDifficulty').value=p.difficulty||'intermediate';$('pSource').value=p.source||'';$('pStatus').value=p.status||'draft';$('saveProblem').textContent='更新题目与关联';
+    setMode('problem');editingProblemId=id;$('problemNumberNotice').textContent='当前题号：P'+(p.problem_no||'—')+'（题号由数据库管理，不可修改）。';$('pTitle').value=p.title||'';$('pSlug').value=p.slug||'';$('pStatement').value=p.statement||'';$('pAnswer').value=p.answer||'';$('pSolution').value=p.solution||'';$('pDifficulty').value=({basic:'introductory',intermediate:'league_easy',advanced:'league_hard'})[p.difficulty]||p.difficulty||'introductory';$('pSource').value=p.source||'';$('pStatus').value=p.status||'draft';$('saveProblem').textContent='更新题目与关联';
     const {data,error}=await db.from('problem_knowledge').select('knowledge_id,relation_type').eq('problem_id',id);
     if(error){status('题目已载入，但读取知识点关联失败：'+error.message,'error');return;}
     const map={};(data||[]).forEach(x=>map[x.knowledge_id]=x.relation_type);renderKnowledgeChecks(map);
@@ -310,7 +305,7 @@ h1{font-size:clamp(25px,3vw,34px);margin:0}h2{font-size:19px;margin:0 0 16px}.su
   $('pTitle').addEventListener('input',()=>{if(!editingProblemId&&!$('pSlug').dataset.touched)$('pSlug').value=slugify($('pTitle').value);});
   $('nSlug').addEventListener('input',()=>{$('nSlug').dataset.touched='1';});$('pSlug').addEventListener('input',()=>{$('pSlug').dataset.touched='1';});
   $('nContent').addEventListener('input',()=>updatePreview('nContent','nPreview'));$('pSolution').addEventListener('input',()=>updatePreview('pSolution','pPreview'));
-  ['nTitle','nSlug','nParent','nType','nStatus','nSummary','nContent','pTitle','pSlug','pProblemNo','pStatement','pAnswer','pSolution','pDifficulty','pSource','pStatus','pTagInput','tagChecks','pendingTagList','knowledgeChecks'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',markDirty);el.addEventListener('change',markDirty);}});
+  ['nTitle','nSlug','nParent','nType','nStatus','nSummary','nContent','pTitle','pSlug','pStatement','pAnswer','pSolution','pDifficulty','pSource','pStatus','pTagInput','tagChecks','pendingTagList','knowledgeChecks'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',markDirty);el.addEventListener('change',markDirty);}});
   $('nTitle').addEventListener('input',()=>{if(!$('nSlug').value)$('nSlug').dataset.touched='';});$('pTitle').addEventListener('input',()=>{if(!$('pSlug').value)$('pSlug').dataset.touched='';});
   addToolbarEvents();startAutosave();init();
 })();
