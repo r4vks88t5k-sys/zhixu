@@ -36,6 +36,7 @@ a{color:inherit;text-decoration:none}button,input,select{font:inherit}.layout{wi
     </header>
     <section class="panel filter-panel" aria-label="题目搜索与筛选">
       <div class="search-row"><div class="search-wrap"><span class="search-icon">⌕</span><input class="search" id="searchInput" type="search" placeholder="搜索题号、题目名称、题面或来源……" autocomplete="off" aria-label="搜索题目"></div><button class="btn" id="clearSearch" type="button">清空</button></div>
+      <div class="filter-row"><label class="filter-label" for="difficultyFilter">难度筛选</label><select class="select" id="difficultyFilter" aria-label="按难度筛选"><option value="">全部难度</option><option value="introductory">入门</option><option value="league_easy">联赛易</option><option value="league_medium">联赛中</option><option value="league_hard">联赛难</option><option value="training_easy">集训队易</option><option value="training_hard">集训队难</option><option value="extreme">极难</option></select></div>
       <div class="filter-row"><div class="filter-label">标签筛选</div><div class="chips" id="tagFilters"><span class="filter-note">正在读取标签……</span></div></div>
       <div class="filter-bottom"><div class="filter-note" id="filterHint">多选标签时采用 AND 逻辑：题目必须包含所有选中的标签。</div><div class="filter-actions"><button class="btn" id="clearTags" type="button">清除标签</button><select class="select" id="pageSize" aria-label="每页显示题目数"><option value="20">每页 20 道</option><option value="30" selected>每页 30 道</option><option value="50">每页 50 道</option></select></div></div>
     </section>
@@ -52,8 +53,8 @@ a{color:inherit;text-decoration:none}button,input,select{font:inherit}.layout{wi
   'use strict';
   const $=id=>document.getElementById(id);
   const db=window.zhixuSupabase;
-  const state={problems:[],tags:[],links:[],selectedTags:new Set(),page:1,pageSize:30,sort:'asc',search:'',tagLoadError:''};
-  const difficultyNames={basic:'基础',intermediate:'提高',advanced:'进阶'};
+  const state={problems:[],tags:[],links:[],selectedTags:new Set(),page:1,pageSize:30,sort:'asc',search:'',difficulty:'',tagLoadError:''};
+  const difficultyNames={introductory:'入门',league_easy:'联赛易',league_medium:'联赛中',league_hard:'联赛难',training_easy:'集训队易',training_hard:'集训队难',extreme:'极难',basic:'入门',intermediate:'联赛易',advanced:'联赛难'};
   function esc(value){return String(value==null?'':value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
   function cleanText(value){return String(value||'').replace(/```[\s\S]*?```/g,' ').replace(/`([^`]+)`/g,'$1').replace(/!\[[^\]]*\]\([^)]*\)/g,' ').replace(/\[([^\]]+)\]\([^)]*\)/g,'$1').replace(/[#>*_~$\\]/g,' ').replace(/\s+/g,' ').trim();}
   function formatNo(problem){const n=Number(problem.problem_no);return Number.isFinite(n)&&n>0?'P'+n:'题号待分配';}
@@ -65,6 +66,7 @@ a{color:inherit;text-decoration:none}button,input,select{font:inherit}.layout{wi
     box.querySelectorAll('[data-tag-id]').forEach(button=>button.addEventListener('click',()=>{const id=button.getAttribute('data-tag-id');if(state.selectedTags.has(id))state.selectedTags.delete(id);else state.selectedTags.add(id);state.page=1;renderTagFilters();renderProblems();}));
   }
   function matchesSearch(p){if(!state.search)return true;const haystack=[formatNo(p),p.problem_no,p.title,p.slug,p.statement,p.answer,p.solution,p.source,p.difficulty].join(' ').toLocaleLowerCase();return haystack.includes(state.search.toLocaleLowerCase());}
+  function matchesDifficulty(p){return !state.difficulty||p.difficulty===state.difficulty;}
   function matchesTags(p){if(!state.selectedTags.size)return true;const ids=new Set(state.links.filter(x=>x.problem_id===p.id).map(x=>x.tag_id));for(const id of state.selectedTags){if(!ids.has(id))return false;}return true;}
   function renderCard(p){
     const tags=problemTags(p);const desc=cleanText(p.statement||p.summary||'');
@@ -84,20 +86,20 @@ a{color:inherit;text-decoration:none}button,input,select{font:inherit}.layout{wi
     nav.innerHTML=html;nav.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',()=>{const p=Number(b.dataset.page);if(p>=1&&p<=totalPages){state.page=p;renderProblems();window.scrollTo({top:$('resultsSummary').getBoundingClientRect().top+window.scrollY-100,behavior:'smooth'});}}));
   }
   function renderProblems(){
-    const list=$('problemList');let items=state.problems.filter(matchesSearch).filter(matchesTags);
+    const list=$('problemList');let items=state.problems.filter(matchesSearch).filter(matchesDifficulty).filter(matchesTags);
     items.sort((a,b)=>state.sort==='asc'?Number(a.problem_no)-Number(b.problem_no):Number(b.problem_no)-Number(a.problem_no));
     const total=items.length,totalPages=Math.max(1,Math.ceil(total/state.pageSize));if(state.page>totalPages)state.page=totalPages;
     $('totalCount').textContent=state.problems.length;
-    $('resultsSummary').textContent='找到 '+total+' 道题'+(state.selectedTags.size?' · 已选 '+state.selectedTags.size+' 个标签（AND）':'')+(state.search?' · 搜索：'+state.search:'');
+    $('resultsSummary').textContent='找到 '+total+' 道题'+(state.difficulty?' · 难度：'+(difficultyNames[state.difficulty]||state.difficulty):'')+(state.selectedTags.size?' · 已选 '+state.selectedTags.size+' 个标签（AND）':'')+(state.search?' · 搜索：'+state.search:'');
     if(!total){
-      const hasFilters=!!state.search||state.selectedTags.size>0;
+      const hasFilters=!!state.search||!!state.difficulty||state.selectedTags.size>0;
       list.innerHTML='<div class="empty"><strong>'+(hasFilters?'没有找到符合条件的题目':'题库暂时还没有已发布题目')+'</strong>'+(hasFilters?'试试减少关键词或清除部分标签。':'在数学编辑器中创建题目并发布后，它们就会出现在这里。')+'<br>'+(hasFilters?'<button class="btn" id="emptyClear" type="button">清除筛选条件</button>':'<a class="btn primary" href="./editor.html?type=problem">＋ 创建第一道题</a>')+'</div>';
       const clear=$('emptyClear');if(clear)clear.addEventListener('click',clearAllFilters);navClear();return;
     }
     const start=(state.page-1)*state.pageSize;list.innerHTML=items.slice(start,start+state.pageSize).map(renderCard).join('');renderPagination(totalPages);
   }
   function navClear(){$('pagination').innerHTML='';}
-  function clearAllFilters(){state.search='';state.selectedTags.clear();state.page=1;$('searchInput').value='';renderTagFilters();renderProblems();}
+  function clearAllFilters(){state.search='';state.difficulty='';state.selectedTags.clear();state.page=1;$('searchInput').value='';$('difficultyFilter').value='';renderTagFilters();renderProblems();}
   async function load(){
     if(!db){$('problemList').innerHTML='<div class="empty error"><strong>无法连接 Supabase</strong>请检查网络连接，以及 math/problems.html 中的 ../supabase.js 路径。</div>';$('resultsSummary').textContent='连接失败';$('totalCount').textContent='!';return;}
     try{
@@ -123,6 +125,7 @@ a{color:inherit;text-decoration:none}button,input,select{font:inherit}.layout{wi
   $('searchInput').addEventListener('input',()=>{clearTimeout(searchTimer);searchTimer=setTimeout(()=>{state.search=$('searchInput').value.trim();state.page=1;renderProblems();},120);});
   $('clearSearch').addEventListener('click',()=>{$('searchInput').value='';state.search='';state.page=1;renderProblems();$('searchInput').focus();});
   $('clearTags').addEventListener('click',()=>{state.selectedTags.clear();state.page=1;renderTagFilters();renderProblems();});
+  $('difficultyFilter').addEventListener('change',()=>{state.difficulty=$('difficultyFilter').value;state.page=1;renderProblems();});
   $('pageSize').addEventListener('change',()=>{state.pageSize=Number($('pageSize').value)||30;state.page=1;renderProblems();});
   $('sortOrder').addEventListener('change',()=>{state.sort=$('sortOrder').value;state.page=1;renderProblems();});
   load();
